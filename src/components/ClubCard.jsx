@@ -8,6 +8,7 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   SendOutlined,
+  CalendarOutlined,
 } from "@ant-design/icons";
 
 const { Text, Title } = Typography;
@@ -32,7 +33,11 @@ export default function ClubCard({ club, onApply, applying }) {
   const isEnrolled = club.enrollmentStatus === "approved";
   const isPending = club.enrollmentStatus === "pending";
   const isRejected = club.enrollmentStatus === "rejected";
-  const isFull = club.capacity && club.currentStudents >= club.capacity;
+  const isFull =
+    club.capacity &&
+    (club.currentStudents >= club.capacity ||
+      club.enrolledStudents?.filter((e) => e.status === "active").length >=
+        club.capacity);
 
   const getStatusButton = () => {
     if (isEnrolled) {

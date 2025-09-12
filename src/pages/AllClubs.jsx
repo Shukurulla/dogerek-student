@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Row,
   Col,
@@ -7,14 +7,15 @@ import {
   Input,
   Typography,
   Empty,
-  Tag,
   Button,
   message,
+  Pagination,
 } from "antd";
-import { SearchOutlined, BookOutlined } from "@ant-design/icons";
+import { SearchOutlined } from "@ant-design/icons";
 import {
   useGetAllClubsQuery,
   useApplyToClubMutation,
+  useGetFacultiesQuery,
 } from "../store/api/studentApi";
 import ClubCard from "../components/ClubCard";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -28,20 +29,24 @@ export default function AllClubs() {
     page: 1,
     limit: 12,
   });
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { data, isLoading } = useGetAllClubsQuery(filters);
+  const { data: facultiesData } = useGetFacultiesQuery();
   const [applyToClub, { isLoading: applying }] = useApplyToClubMutation();
 
   const clubs = data?.data?.clubs || [];
   const pagination = data?.data?.pagination || {};
+  const faculties = facultiesData?.data || [];
 
-  // Mock faculties
-  const faculties = [
-    { id: 1, name: "Matematika fakulteti" },
-    { id: 2, name: "Fizika fakulteti" },
-    { id: 3, name: "Informatika fakulteti" },
-    { id: 4, name: "Tarix fakulteti" },
-  ];
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters((prev) => ({ ...prev, search: searchTerm, page: 1 }));
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const handleApply = async (clubId) => {
     try {
@@ -54,21 +59,29 @@ export default function AllClubs() {
     }
   };
 
-  if (isLoading) return <LoadingSpinner size="large" />;
+  const handlePageChange = (page) => {
+    setFilters((prev) => ({ ...prev, page }));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  if (isLoading && filters.page === 1) return <LoadingSpinner size="large" />;
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <Title level={3}>Barcha to'garaklar</Title>
+      <div className="flex justify-between items-center flex-wrap gap-3">
+        <Title level={3} className="!mb-0">
+          Barcha to'garaklar
+        </Title>
 
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap">
           <Select
             placeholder="Fakultet"
             style={{ width: 200 }}
             allowClear
             onChange={(value) =>
-              setFilters((prev) => ({ ...prev, facultyId: value }))
+              setFilters((prev) => ({ ...prev, facultyId: value, page: 1 }))
             }
+            loading={!facultiesData}
           >
             {faculties.map((f) => (
               <Select.Option key={f.id} value={f.id}>
@@ -81,9 +94,8 @@ export default function AllClubs() {
             placeholder="Qidirish..."
             prefix={<SearchOutlined />}
             style={{ width: 250 }}
-            onChange={(e) =>
-              setFilters((prev) => ({ ...prev, search: e.target.value }))
-            }
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
@@ -92,7 +104,7 @@ export default function AllClubs() {
         <>
           <Row gutter={[16, 16]}>
             {clubs.map((club) => (
-              <Col xs={24} sm={12} lg={8} xl={6} key={club._id}>
+              <Col xs={24} sm={12} lg={8} xl={6} key={club._id || club.id}>
                 <ClubCard
                   club={club}
                   onApply={handleApply}
@@ -104,26 +116,25 @@ export default function AllClubs() {
 
           {pagination.pages > 1 && (
             <div className="flex justify-center mt-6">
-              <Button.Group>
-                {Array.from({ length: pagination.pages }, (_, i) => (
-                  <Button
-                    key={i + 1}
-                    type={filters.page === i + 1 ? "primary" : "default"}
-                    onClick={() =>
-                      setFilters((prev) => ({ ...prev, page: i + 1 }))
-                    }
-                  >
-                    {i + 1}
-                  </Button>
-                ))}
-              </Button.Group>
+              <Pagination
+                current={pagination.page}
+                total={pagination.total}
+                pageSize={pagination.limit}
+                onChange={handlePageChange}
+                showSizeChanger={false}
+                showTotal={(total) => `Jami ${total} ta to'garak`}
+              />
             </div>
           )}
         </>
       ) : (
         <Card className="text-center py-12">
           <Empty
-            description="To'garaklar topilmadi"
+            description={
+              filters.search || filters.facultyId
+                ? "Mos to'garaklar topilmadi"
+                : "To'garaklar mavjud emas"
+            }
             image={Empty.PRESENTED_IMAGE_SIMPLE}
           />
         </Card>

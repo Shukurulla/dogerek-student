@@ -1,3 +1,4 @@
+import React from "react";
 import {
   Row,
   Col,
@@ -167,8 +168,8 @@ export default function Dashboard() {
                       </div>
                       {club.schedule && (
                         <Text className="text-xs text-gray-500">
-                          {club.schedule.time?.start} -{" "}
-                          {club.schedule.time?.end}
+                          {club.schedule.time?.start || club.schedule} -{" "}
+                          {club.schedule.time?.end || ""}
                         </Text>
                       )}
                     </div>
@@ -177,7 +178,11 @@ export default function Dashboard() {
               />
             ) : (
               <Empty description="To'garak mavjud emas">
-                <Button type="primary" onClick={() => navigate("/all-clubs")}>
+                <Button
+                  type="primary"
+                  onClick={() => navigate("/all-clubs")}
+                  className="bg-gradient-to-r from-cyan-500 to-teal-600 border-0"
+                >
                   To'garak tanlash
                 </Button>
               </Empty>
@@ -212,13 +217,6 @@ export default function Dashboard() {
                 </ResponsiveContainer>
 
                 <div className="flex justify-around mt-4">
-                  <div className="text-center">
-                    <CheckCircleOutlined className="text-2xl text-cyan-500 mb-1" />
-                    <Text className="block text-gray-500">Kelgan</Text>
-                    <Text className="text-xl font-bold">
-                      {statistics?.thisMonthPresent || 0}
-                    </Text>
-                  </div>
                   <div className="text-center">
                     <ClockCircleOutlined className="text-2xl text-red-500 mb-1" />
                     <Text className="block text-gray-500">Kelmagan</Text>

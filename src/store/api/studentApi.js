@@ -8,6 +8,20 @@ export const studentApi = baseApi.injectEndpoints({
       providesTags: ["Dashboard"],
     }),
 
+    // Faculties and Groups (for filters)
+    getFaculties: builder.query({
+      query: () => "/faculties",
+      providesTags: ["Faculty"],
+    }),
+
+    getGroups: builder.query({
+      query: (facultyId) => ({
+        url: "/groups",
+        params: { facultyId },
+      }),
+      providesTags: ["Group"],
+    }),
+
     // Clubs
     getAllClubs: builder.query({
       query: (params) => ({
@@ -82,11 +96,32 @@ export const studentApi = baseApi.injectEndpoints({
       }),
       providesTags: ["Attendance"],
     }),
+
+    // Profile
+    updateProfile: builder.mutation({
+      query: (data) => ({
+        url: "/student/profile",
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["Dashboard"],
+    }),
+
+    // Change Password
+    changePassword: builder.mutation({
+      query: (data) => ({
+        url: "/auth/change-password",
+        method: "POST",
+        body: data,
+      }),
+    }),
   }),
 });
 
 export const {
   useGetStudentDashboardQuery,
+  useGetFacultiesQuery,
+  useGetGroupsQuery,
   useGetAllClubsQuery,
   useGetClubDetailsQuery,
   useApplyToClubMutation,
@@ -97,4 +132,6 @@ export const {
   useUpdateExternalCourseMutation,
   useDeleteExternalCourseMutation,
   useGetMyAttendanceQuery,
+  useUpdateProfileMutation,
+  useChangePasswordMutation,
 } = studentApi;
