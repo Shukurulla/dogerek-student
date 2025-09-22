@@ -11,7 +11,7 @@ import {
   message,
   Pagination,
 } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import { SearchOutlined, AppstoreOutlined } from "@ant-design/icons";
 import {
   useGetAllClubsQuery,
   useApplyToClubMutation,
@@ -24,14 +24,18 @@ const { Title } = Typography;
 
 export default function AllClubs() {
   const [filters, setFilters] = useState({
-    facultyId: null,
+    facultyId: undefined,
     search: "",
     page: 1,
     limit: 12,
   });
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data, isLoading } = useGetAllClubsQuery(filters);
+  const { data, isLoading } = useGetAllClubsQuery(
+    Object.fromEntries(
+      Object.entries(filters).filter(([_, v]) => v !== undefined && v !== "")
+    )
+  );
   const { data: facultiesData } = useGetFacultiesQuery();
   const [applyToClub, { isLoading: applying }] = useApplyToClubMutation();
 
@@ -67,19 +71,27 @@ export default function AllClubs() {
   if (isLoading && filters.page === 1) return <LoadingSpinner size="large" />;
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center flex-wrap gap-3">
-        <Title level={3} className="!mb-0">
+    <div className="space-y-4 md:space-y-6">
+      {/* Header - Responsive */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <Title level={3} className="!mb-0 flex items-center gap-2">
+          <AppstoreOutlined className="text-cyan-600" />
           Barcha to'garaklar
         </Title>
 
-        <div className="flex gap-3 flex-wrap">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Select
             placeholder="Fakultet"
-            style={{ width: 200 }}
+            style={{ width: "100%" }}
+            className="w-full sm:w-48 md:w-56"
             allowClear
+            value={filters.facultyId}
             onChange={(value) =>
-              setFilters((prev) => ({ ...prev, facultyId: value, page: 1 }))
+              setFilters((prev) => ({
+                ...prev,
+                facultyId: value || undefined,
+                page: 1,
+              }))
             }
             loading={!facultiesData}
           >
@@ -93,7 +105,7 @@ export default function AllClubs() {
           <Input
             placeholder="Qidirish..."
             prefix={<SearchOutlined />}
-            style={{ width: 250 }}
+            className="w-full sm:w-48 md:w-64"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -104,7 +116,12 @@ export default function AllClubs() {
         <>
           <Row gutter={[16, 16]}>
             {clubs.map((club) => (
-              <Col xs={24} sm={12} lg={8} xl={6} key={club._id || club.id}>
+              <Col
+                key={club._id || club.id}
+                xs={24} // Mobile: 1 column
+                sm={12} // Tablet: 2 columns
+                lg={8} // Desktop: 3 columns
+              >
                 <ClubCard
                   club={club}
                   onApply={handleApply}
@@ -115,7 +132,7 @@ export default function AllClubs() {
           </Row>
 
           {pagination.pages > 1 && (
-            <div className="flex justify-center mt-6">
+            <div className="flex justify-center mt-4 md:mt-6">
               <Pagination
                 current={pagination.page}
                 total={pagination.total}
@@ -123,12 +140,15 @@ export default function AllClubs() {
                 onChange={handlePageChange}
                 showSizeChanger={false}
                 showTotal={(total) => `Jami ${total} ta to'garak`}
+                responsive
+                size="small"
+                className="text-center"
               />
             </div>
           )}
         </>
       ) : (
-        <Card className="text-center py-12">
+        <Card className="text-center py-8 md:py-12">
           <Empty
             description={
               filters.search || filters.facultyId

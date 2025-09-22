@@ -8,6 +8,7 @@ import {
   Space,
   Badge,
   Typography,
+  Drawer,
 } from "antd";
 import {
   MenuFoldOutlined,
@@ -62,8 +63,8 @@ export default function Header({ collapsed, setCollapsed }) {
   const notificationItems = notifications.map((notif, index) => ({
     key: index,
     label: (
-      <div>
-        <Text className="font-medium">{notif.club?.name} to'garak</Text>
+      <div className="py-1">
+        <Text className="font-medium block">{notif.club?.name} to'garak</Text>
         <Text className="block text-xs text-gray-500">
           Arizangiz{" "}
           {notif.status === "approved" ? "qabul qilindi" : "rad etildi"}
@@ -74,8 +75,9 @@ export default function Header({ collapsed, setCollapsed }) {
   }));
 
   return (
-    <AntHeader className="bg-white px-6 flex items-center justify-between shadow-sm sticky top-0 z-10">
-      <div className="flex items-center gap-4">
+    <AntHeader className="bg-white px-3 md:px-6 flex items-center justify-between shadow-sm sticky top-0 z-10">
+      {/* Left Section */}
+      <div className="flex items-center gap-2 md:gap-4 overflow-hidden">
         <Button
           type="text"
           icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
@@ -83,43 +85,74 @@ export default function Header({ collapsed, setCollapsed }) {
           className="text-lg"
         />
 
-        <div className="flex items-center gap-2">
+        {/* Desktop Student Info */}
+        <div className="hidden sm:flex items-center gap-2">
           <IdcardOutlined className="text-cyan-600" />
-          <Text className="font-medium text-gray-700">
+          <Text className="font-medium text-gray-700 text-sm md:text-base">
             {student?.student_id_number}
           </Text>
-          <Text className="text-gray-500">|</Text>
-          <Text className="text-gray-600">{student?.group?.name}</Text>
+          <Text className="text-gray-500 hidden md:inline">|</Text>
+          <Text className="text-gray-600 text-sm md:text-base hidden md:inline">
+            {student?.group?.name}
+          </Text>
+        </div>
+
+        {/* Mobile Student Info */}
+        <div className="sm:hidden">
+          <Text className="font-medium text-gray-700 text-xs truncate">
+            {student?.student_id_number}
+          </Text>
         </div>
       </div>
 
-      <Space size="large">
+      {/* Right Section */}
+      <Space size={[8, 0]} className="flex-shrink-0">
+        {/* Notifications */}
         <Dropdown
           menu={{ items: notificationItems }}
           placement="bottomRight"
           disabled={notifications.length === 0}
+          trigger={["click"]}
         >
           <Badge count={notifications.length} size="small">
             <Button
               type="text"
               shape="circle"
-              icon={<BellOutlined className="text-lg" />}
+              icon={<BellOutlined className="text-base md:text-lg" />}
+              size="small"
             />
           </Badge>
         </Dropdown>
 
-        <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" arrow>
-          <Space className="cursor-pointer hover:bg-gray-50 px-3 py-1 rounded-lg transition-colors">
+        {/* User Menu */}
+        <Dropdown
+          menu={{ items: userMenuItems }}
+          placement="bottomRight"
+          arrow
+          trigger={["click"]}
+        >
+          <Space
+            className="cursor-pointer hover:bg-gray-50 px-1 md:px-3 py-1 rounded-lg transition-colors"
+            size={[4, 0]}
+          >
             <Avatar
               src={student?.image}
               icon={!student?.image && <UserOutlined />}
               className="bg-cyan-500"
+              size={window.innerWidth < 640 ? "small" : "default"}
             />
-            <div className="text-left">
-              <div className="font-medium">{student?.full_name}</div>
-              <div className="text-xs text-gray-500">
+            {/* Desktop Name Display */}
+            <div className="text-left hidden md:block">
+              <div className="font-medium text-sm">{student?.full_name}</div>
+              <div className="text-xs text-gray-500 hidden lg:block">
                 {student?.department?.name}
               </div>
+            </div>
+            {/* Mobile Name Display - First name only */}
+            <div className="text-left block md:hidden">
+              <Text className="text-xs font-medium truncate max-w-[80px]">
+                {student?.first_name || student?.full_name?.split(" ")[0]}
+              </Text>
             </div>
           </Space>
         </Dropdown>

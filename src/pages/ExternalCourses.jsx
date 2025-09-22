@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   Card,
   Button,
-  Table,
   Typography,
   Tag,
   Empty,
@@ -12,6 +11,7 @@ import {
   Row,
   Col,
   Statistic,
+  Tooltip,
 } from "antd";
 import {
   PlusOutlined,
@@ -76,174 +76,166 @@ export default function ExternalCourses() {
     }
   };
 
-  const columns = [
-    {
-      title: "Kurs nomi",
-      key: "course",
-      render: (_, record) => (
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <BookOutlined className="text-purple-500" />
-            <Text className="font-medium">{record.courseName}</Text>
-          </div>
-          <Text className="text-xs text-gray-500">
-            {record.institutionName}
-          </Text>
-        </div>
-      ),
-    },
-    {
-      title: "Jadval",
-      key: "schedule",
-      render: (_, record) => (
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <ClockCircleOutlined className="text-gray-400" />
-            <Text className="text-sm">
-              {record.schedule?.time?.start} - {record.schedule?.time?.end}
-            </Text>
-          </div>
-          <div className="flex gap-1">
-            {record.schedule?.days?.map((day) => (
-              <Tag key={day} color="purple" className="m-0 text-xs">
-                {weekDays[day]}
-              </Tag>
-            ))}
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: "Manzil",
-      dataIndex: "address",
-      key: "address",
-      render: (address) => (
-        <div className="flex items-start gap-2">
-          <EnvironmentOutlined className="text-gray-400 mt-1" />
-          <Text className="text-sm">{address}</Text>
-        </div>
-      ),
-    },
-    {
-      title: "O'qituvchi",
-      key: "instructor",
-      render: (_, record) => {
-        if (!record.instructor?.name)
-          return <Text className="text-gray-400">-</Text>;
-        return (
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <UserOutlined className="text-gray-400" />
-              <Text className="text-sm">{record.instructor.name}</Text>
-            </div>
-            {record.instructor.phone && (
-              <div className="flex items-center gap-2">
-                <PhoneOutlined className="text-gray-400 text-xs" />
-                <Text className="text-xs text-gray-500">
-                  {record.instructor.phone}
-                </Text>
-              </div>
-            )}
-          </div>
-        );
-      },
-    },
-    {
-      title: "Muddat",
-      key: "duration",
-      render: (_, record) => {
-        if (!record.startDate) return <Text className="text-gray-400">-</Text>;
-        return (
-          <div className="text-sm">
-            <div className="flex items-center gap-1">
-              <CalendarOutlined className="text-gray-400 text-xs" />
-              <Text className="text-xs">
-                {dayjs(record.startDate).format("DD.MM.YYYY")}
-              </Text>
-            </div>
-            <div className="flex items-center gap-1">
-              <Text className="text-xs text-gray-400">→</Text>
-              <Text className="text-xs">
-                {record.endDate
-                  ? dayjs(record.endDate).format("DD.MM.YYYY")
-                  : "Davom etmoqda"}
-              </Text>
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      title: "Status",
-      key: "status",
-      render: (_, record) => {
-        const isActive = record.isActive !== false;
-        const isExpired =
-          record.endDate && dayjs(record.endDate).isBefore(dayjs());
+  const getStatusTag = (course) => {
+    const isActive = course.isActive !== false;
+    const isExpired = course.endDate && dayjs(course.endDate).isBefore(dayjs());
 
-        if (!isActive) {
-          return <Tag color="gray">Faol emas</Tag>;
-        }
-        if (isExpired) {
-          return <Tag color="orange">Tugagan</Tag>;
-        }
-        return <Tag color="green">Faol</Tag>;
-      },
-    },
-    {
-      title: "Amallar",
-      key: "actions",
-      width: 100,
-      render: (_, record) => (
-        <Space>
+    if (!isActive) {
+      return <Tag color="gray">Faol emas</Tag>;
+    }
+    if (isExpired) {
+      return <Tag color="orange">Tugagan</Tag>;
+    }
+    return <Tag color="green">Faol</Tag>;
+  };
+
+  const CourseCard = ({ course }) => (
+    <Card
+      className="h-full shadow-md border-0 hover:shadow-xl transition-all duration-300"
+      cover={
+        <div className="h-32 bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center relative">
+          <GlobalOutlined className="text-5xl text-white/80" />
+          <div className="absolute top-2 right-2">{getStatusTag(course)}</div>
+        </div>
+      }
+      actions={[
+        <Tooltip title="Tahrirlash" key="edit">
           <Button
             type="text"
             icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
+            onClick={() => handleEdit(course)}
             className="text-blue-500 hover:text-blue-600"
           />
-          <Popconfirm
-            title="O'chirishni tasdiqlaysizmi?"
-            description="Bu amalni qaytarib bo'lmaydi"
-            onConfirm={() => handleDelete(record._id)}
-            okText="Ha"
-            cancelText="Yo'q"
-          >
+        </Tooltip>,
+        <Popconfirm
+          key="delete"
+          title="O'chirishni tasdiqlaysizmi?"
+          description="Bu amalni qaytarib bo'lmaydi"
+          onConfirm={() => handleDelete(course._id)}
+          okText="Ha"
+          cancelText="Yo'q"
+        >
+          <Tooltip title="O'chirish">
             <Button
               type="text"
               icon={<DeleteOutlined />}
               className="text-red-500 hover:text-red-600"
             />
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
+          </Tooltip>
+        </Popconfirm>,
+      ]}
+    >
+      <div className="space-y-3">
+        <div>
+          <Title level={5} className="!mb-1">
+            {course.courseName}
+          </Title>
+          <Text className="text-gray-600 text-sm">
+            {course.institutionName}
+          </Text>
+        </div>
+
+        <div className="space-y-2">
+          {/* Schedule */}
+          <div className="flex items-center gap-2">
+            <ClockCircleOutlined className="text-gray-400" />
+            <div>
+              <Text className="text-sm">
+                {course.schedule?.time?.start} - {course.schedule?.time?.end}
+              </Text>
+              <div className="flex gap-1 mt-1">
+                {course.schedule?.days?.map((day) => (
+                  <Tag key={day} color="purple" className="m-0 text-xs">
+                    {weekDays[day]}
+                  </Tag>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Address */}
+          <div className="flex items-start gap-2">
+            <EnvironmentOutlined className="text-gray-400 mt-1" />
+            <Text className="text-sm text-gray-600 line-clamp-2">
+              {course.address}
+            </Text>
+          </div>
+
+          {/* Instructor */}
+          {course.instructor?.name && (
+            <div className="flex items-start gap-2">
+              <UserOutlined className="text-gray-400" />
+              <div>
+                <Text className="text-sm block">{course.instructor.name}</Text>
+                {course.instructor.phone && (
+                  <Text className="text-xs text-gray-500">
+                    <PhoneOutlined className="mr-1" />
+                    {course.instructor.phone}
+                  </Text>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Duration */}
+          {course.startDate && (
+            <div className="flex items-center gap-2">
+              <CalendarOutlined className="text-gray-400" />
+              <div className="text-sm">
+                <Text className="text-gray-600">
+                  {dayjs(course.startDate).format("DD.MM.YYYY")}
+                  {course.endDate && (
+                    <>
+                      {" - "}
+                      {dayjs(course.endDate).format("DD.MM.YYYY")}
+                    </>
+                  )}
+                </Text>
+              </div>
+            </div>
+          )}
+
+          {/* Student Phone */}
+          {course.studentPhone && (
+            <div className="pt-2 border-t">
+              <Text className="text-xs text-gray-500">
+                Sizning tel: {course.studentPhone}
+              </Text>
+            </div>
+          )}
+        </div>
+      </div>
+    </Card>
+  );
 
   if (isLoading) return <LoadingSpinner size="large" />;
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <Title level={3}>Tashqi kurslar</Title>
+    <div className="space-y-4 md:space-y-6">
+      {/* Header - Responsive */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <Title level={3} className="!mb-0">
+          Tashqi kurslar
+        </Title>
         <Button
           type="primary"
           icon={<PlusOutlined />}
           onClick={handleAdd}
-          className="bg-gradient-to-r from-purple-500 to-purple-600 border-0"
+          className="bg-gradient-to-r from-purple-500 to-purple-600 border-0 w-full sm:w-auto"
         >
           Yangi kurs qo'shish
         </Button>
       </div>
 
+      {/* Info Card */}
       <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-0">
-        <div className="flex items-center gap-3">
-          <GlobalOutlined className="text-3xl text-purple-500" />
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <GlobalOutlined className="text-3xl text-purple-500 flex-shrink-0" />
           <div>
             <Title level={5} className="!mb-1">
               Tashqi kurslar haqida
             </Title>
-            <Text className="text-gray-600">
+            <Text className="text-gray-600 text-sm sm:text-base">
               Universitet tashqarisida qatnayotgan kurslaringizni qo'shing. Bu
               ma'lumotlar sizning band ekanligingizni ko'rsatadi.
             </Text>
@@ -253,14 +245,15 @@ export default function ExternalCourses() {
 
       {courses.length > 0 ? (
         <>
-          <Row gutter={[16, 16]}>
+          {/* Statistics */}
+          <Row gutter={[12, 12]} className="mb-4">
             <Col xs={24} sm={8}>
               <Card className="text-center border-purple-200 bg-purple-50">
                 <Statistic
                   title="Jami kurslar"
                   value={courses.length}
                   prefix={<BookOutlined />}
-                  valueStyle={{ color: "#722ed1" }}
+                  valueStyle={{ color: "#722ed1", fontSize: 24 }}
                 />
               </Card>
             </Col>
@@ -270,7 +263,7 @@ export default function ExternalCourses() {
                   title="Faol kurslar"
                   value={courses.filter((c) => c.isActive !== false).length}
                   prefix={<CheckCircleOutlined />}
-                  valueStyle={{ color: "#52c41a" }}
+                  valueStyle={{ color: "#52c41a", fontSize: 24 }}
                 />
               </Card>
             </Col>
@@ -284,27 +277,28 @@ export default function ExternalCourses() {
                     ).length
                   }
                   prefix={<CalendarOutlined />}
-                  valueStyle={{ color: "#fa8c16" }}
+                  valueStyle={{ color: "#fa8c16", fontSize: 24 }}
                 />
               </Card>
             </Col>
           </Row>
 
-          <Card className="border-0 shadow-md">
-            <Table
-              columns={columns}
-              dataSource={courses}
-              rowKey="_id"
-              pagination={{
-                pageSize: 10,
-                showSizeChanger: true,
-                showTotal: (total) => `Jami: ${total} ta`,
-              }}
-            />
-          </Card>
+          {/* Courses Grid */}
+          <Row gutter={[16, 16]}>
+            {courses.map((course) => (
+              <Col
+                key={course._id}
+                xs={24} // Mobile: 1 column
+                sm={12} // Tablet: 2 columns
+                lg={8} // Desktop: 3 columns
+              >
+                <CourseCard course={course} />
+              </Col>
+            ))}
+          </Row>
         </>
       ) : (
-        <Card className="text-center py-12">
+        <Card className="text-center py-8 md:py-12">
           <Empty
             description="Tashqi kurslar mavjud emas"
             image={Empty.PRESENTED_IMAGE_SIMPLE}

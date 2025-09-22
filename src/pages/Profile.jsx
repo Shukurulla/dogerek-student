@@ -10,9 +10,9 @@ import {
   Input,
   Modal,
   message,
-  Descriptions,
   Tag,
   Divider,
+  Space,
 } from "antd";
 import {
   UserOutlined,
@@ -25,6 +25,10 @@ import {
   GlobalOutlined,
   CalendarOutlined,
   SaveOutlined,
+  HomeOutlined,
+  PhoneOutlined,
+  ClockCircleOutlined,
+  CheckCircleOutlined,
 } from "@ant-design/icons";
 import { useSelector, useDispatch } from "react-redux";
 import { updateProfile } from "../store/api/authApi";
@@ -76,23 +80,39 @@ export default function Profile() {
     }
   };
 
-  return (
-    <div className="space-y-6">
-      <Title level={3}>Mening profilim</Title>
+  // Info Item Component for responsive design
+  const InfoItem = ({ label, value, icon }) => (
+    <div className="flex items-start gap-3 py-3 border-b border-gray-100 last:border-0">
+      {icon && <div className="text-gray-400 mt-1">{icon}</div>}
+      <div className="flex-1">
+        <Text className="text-xs text-gray-500 block">{label}</Text>
+        <Text className="text-sm font-medium text-gray-800">
+          {value || "-"}
+        </Text>
+      </div>
+    </div>
+  );
 
-      <Row gutter={[24, 24]}>
+  return (
+    <div className="space-y-4 md:space-y-6">
+      <Title level={3} className="px-4 md:px-0">
+        Mening profilim
+      </Title>
+
+      <Row gutter={[16, 16]}>
+        {/* Left Sidebar - Profile Card */}
         <Col xs={24} lg={8}>
           <Card className="text-center shadow-md border-0">
             <Avatar
-              size={120}
+              size={100}
               src={student?.image}
               icon={!student?.image && <UserOutlined />}
               className="mb-4 bg-gradient-to-r from-cyan-500 to-teal-600"
             />
-            <Title level={4} className="!mb-2">
+            <Title level={4} className="!mb-2 text-base md:text-lg">
               {student?.full_name}
             </Title>
-            <Text className="text-gray-600 block mb-1">
+            <Text className="text-gray-600 block mb-1 text-sm">
               {student?.student_id_number}
             </Text>
             <Tag color="cyan" className="mb-4">
@@ -146,88 +166,151 @@ export default function Profile() {
           </Card>
         </Col>
 
+        {/* Right Content - Information Cards */}
         <Col xs={24} lg={16}>
-          <Card title="Shaxsiy ma'lumotlar" className="shadow-md border-0 mb-6">
-            <Descriptions column={{ xs: 1, sm: 2 }} bordered>
-              <Descriptions.Item label="F.I.O">
-                {student?.full_name}
-              </Descriptions.Item>
-              <Descriptions.Item label="Student ID">
-                {student?.student_id_number}
-              </Descriptions.Item>
-              <Descriptions.Item label="Jins">
-                {student?.gender?.name || "-"}
-              </Descriptions.Item>
-              <Descriptions.Item label="Tug'ilgan sana">
-                {student?.birth_date
-                  ? dayjs.unix(student.birth_date).format("DD.MM.YYYY")
-                  : "-"}
-              </Descriptions.Item>
-              <Descriptions.Item label="Email" span={2}>
-                {student?.email || (
-                  <Text className="text-gray-400">Kiritilmagan</Text>
-                )}
-              </Descriptions.Item>
-            </Descriptions>
+          {/* Personal Information */}
+          <Card
+            title={
+              <span className="text-base md:text-lg">Shaxsiy ma'lumotlar</span>
+            }
+            className="shadow-md border-0 mb-4"
+          >
+            <Row gutter={[16, 0]}>
+              <Col xs={24} md={12}>
+                <InfoItem
+                  label="F.I.O"
+                  value={student?.full_name}
+                  icon={<UserOutlined />}
+                />
+                <InfoItem
+                  label="Student ID"
+                  value={student?.student_id_number}
+                  icon={<IdcardOutlined />}
+                />
+                <InfoItem
+                  label="Email"
+                  value={student?.email || "Kiritilmagan"}
+                  icon={<MailOutlined />}
+                />
+              </Col>
+              <Col xs={24} md={12}>
+                <InfoItem
+                  label="Jins"
+                  value={student?.gender?.name}
+                  icon={<UserOutlined />}
+                />
+                <InfoItem
+                  label="Tug'ilgan sana"
+                  value={
+                    student?.birth_date
+                      ? dayjs.unix(student.birth_date).format("DD.MM.YYYY")
+                      : "-"
+                  }
+                  icon={<CalendarOutlined />}
+                />
+              </Col>
+            </Row>
           </Card>
 
-          <Card title="Ta'lim ma'lumotlari" className="shadow-md border-0 mb-6">
-            <Descriptions column={{ xs: 1, sm: 2 }} bordered>
-              <Descriptions.Item label="Fakultet" span={2}>
-                <Tag color="blue">{student?.department?.name}</Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="Yo'nalish" span={2}>
-                {student?.specialty?.name}
-              </Descriptions.Item>
-              <Descriptions.Item label="Guruh">
-                <Tag color="cyan">{student?.group?.name}</Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="Ta'lim tili">
-                {student?.group?.educationLang?.name}
-              </Descriptions.Item>
-              <Descriptions.Item label="Bosqich">
-                {student?.level?.name}
-              </Descriptions.Item>
-              <Descriptions.Item label="Semestr">
-                {student?.semester?.name}
-              </Descriptions.Item>
-              <Descriptions.Item label="O'quv yili">
-                {student?.educationYear?.name}
-              </Descriptions.Item>
-              <Descriptions.Item label="Ta'lim turi">
-                {student?.educationType?.name}
-              </Descriptions.Item>
-              <Descriptions.Item label="Ta'lim shakli">
-                {student?.educationForm?.name}
-              </Descriptions.Item>
-              <Descriptions.Item label="To'lov shakli">
-                {student?.paymentForm?.name}
-              </Descriptions.Item>
-              <Descriptions.Item label="Kirgan yili">
-                {student?.year_of_enter}
-              </Descriptions.Item>
-              <Descriptions.Item label="Status">
-                <Tag color="green">{student?.studentStatus?.name}</Tag>
-              </Descriptions.Item>
-            </Descriptions>
+          {/* Education Information */}
+          <Card
+            title={
+              <span className="text-base md:text-lg">Ta'lim ma'lumotlari</span>
+            }
+            className="shadow-md border-0 mb-4"
+          >
+            <Row gutter={[16, 0]}>
+              <Col xs={24} md={12}>
+                <InfoItem
+                  label="Fakultet"
+                  value={
+                    <Tag color="blue" className="mt-1">
+                      {student?.department?.name}
+                    </Tag>
+                  }
+                  icon={<HomeOutlined />}
+                />
+                <InfoItem
+                  label="Yo'nalish"
+                  value={student?.specialty?.name}
+                  icon={<BookOutlined />}
+                />
+                <InfoItem
+                  label="Guruh"
+                  value={
+                    <Tag color="cyan" className="mt-1">
+                      {student?.group?.name}
+                    </Tag>
+                  }
+                  icon={<TeamOutlined />}
+                />
+                <InfoItem
+                  label="Ta'lim tili"
+                  value={student?.group?.educationLang?.name}
+                />
+                <InfoItem label="Bosqich" value={student?.level?.name} />
+                <InfoItem label="Semestr" value={student?.semester?.name} />
+              </Col>
+              <Col xs={24} md={12}>
+                <InfoItem
+                  label="O'quv yili"
+                  value={student?.educationYear?.name}
+                />
+                <InfoItem
+                  label="Ta'lim turi"
+                  value={student?.educationType?.name}
+                />
+                <InfoItem
+                  label="Ta'lim shakli"
+                  value={student?.educationForm?.name}
+                />
+                <InfoItem
+                  label="To'lov shakli"
+                  value={student?.paymentForm?.name}
+                />
+                <InfoItem label="Kirgan yili" value={student?.year_of_enter} />
+                <InfoItem
+                  label="Status"
+                  value={
+                    <Tag color="green" className="mt-1">
+                      {student?.studentStatus?.name}
+                    </Tag>
+                  }
+                />
+              </Col>
+            </Row>
           </Card>
 
-          <Card title="Tizim ma'lumotlari" className="shadow-md border-0">
-            <Descriptions column={1} bordered>
-              <Descriptions.Item label="Ro'yxatdan o'tgan">
-                {student?.createdAt
+          {/* System Information */}
+          <Card
+            title={
+              <span className="text-base md:text-lg">Tizim ma'lumotlari</span>
+            }
+            className="shadow-md border-0"
+          >
+            <InfoItem
+              label="Ro'yxatdan o'tgan"
+              value={
+                student?.createdAt
                   ? dayjs(student.createdAt).format("DD.MM.YYYY HH:mm")
-                  : "-"}
-              </Descriptions.Item>
-              <Descriptions.Item label="Oxirgi kirish">
-                {student?.lastLogin
+                  : "-"
+              }
+              icon={<CalendarOutlined />}
+            />
+            <InfoItem
+              label="Oxirgi kirish"
+              value={
+                student?.lastLogin
                   ? dayjs(student.lastLogin).format("DD.MM.YYYY HH:mm")
-                  : "-"}
-              </Descriptions.Item>
-              <Descriptions.Item label="Profil holati">
-                <Tag color="green">Faol</Tag>
-              </Descriptions.Item>
-            </Descriptions>
+                  : "-"
+              }
+              icon={<ClockCircleOutlined />}
+            />
+            <InfoItem
+              label="Profil holati"
+              value={<Tag color="green">Faol</Tag>}
+              icon={<CheckCircleOutlined />}
+            />
           </Card>
         </Col>
       </Row>
@@ -238,6 +321,7 @@ export default function Profile() {
         open={editModalVisible}
         onCancel={() => setEditModalVisible(false)}
         footer={null}
+        width={window.innerWidth < 768 ? "95%" : 500}
       >
         <Form form={editForm} layout="vertical" onFinish={handleUpdateProfile}>
           <Form.Item
@@ -276,6 +360,7 @@ export default function Profile() {
           passwordForm.resetFields();
         }}
         footer={null}
+        width={window.innerWidth < 768 ? "95%" : 500}
       >
         <Form
           form={passwordForm}
