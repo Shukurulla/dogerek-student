@@ -11,6 +11,7 @@ import {
 } from "@ant-design/icons";
 import { useGetMyApplicationsQuery } from "../store/api/studentApi";
 import { useState, useEffect } from "react";
+import { logo } from "../../public";
 
 const { Sider } = Layout;
 
@@ -94,7 +95,14 @@ export default function Sidebar({ collapsed, setCollapsed }) {
             collapsed && !isMobile ? "text-xl" : "text-xl md:text-2xl"
           }`}
         >
-          {collapsed && !isMobile ? "S" : "Student Panel"}
+          {collapsed && !isMobile ? (
+            "S"
+          ) : (
+            <div className="flex items-center justify-start gap-2">
+              <img src={logo} className="w-[50px] " alt="" />
+              <p>Student panel</p>
+            </div>
+          )}
         </h1>
       </div>
 
