@@ -8,6 +8,12 @@ export const studentApi = baseApi.injectEndpoints({
       providesTags: ["Dashboard"],
     }),
 
+    // Categories (for filters)
+    getCategories: builder.query({
+      query: () => "/categories",
+      providesTags: ["Category"],
+    }),
+
     // Faculties and Groups (for filters)
     getFaculties: builder.query({
       query: () => "/faculties",
@@ -120,6 +126,7 @@ export const studentApi = baseApi.injectEndpoints({
 
 export const {
   useGetStudentDashboardQuery,
+  useGetCategoriesQuery,
   useGetFacultiesQuery,
   useGetGroupsQuery,
   useGetAllClubsQuery,

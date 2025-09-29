@@ -10,12 +10,18 @@ import {
   Button,
   message,
   Pagination,
+  Tag,
 } from "antd";
-import { SearchOutlined, AppstoreOutlined } from "@ant-design/icons";
+import {
+  SearchOutlined,
+  AppstoreOutlined,
+  FilterOutlined,
+} from "@ant-design/icons";
 import {
   useGetAllClubsQuery,
   useApplyToClubMutation,
   useGetFacultiesQuery,
+  useGetCategoriesQuery,
 } from "../store/api/studentApi";
 import ClubCard from "../components/ClubCard";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -25,11 +31,13 @@ const { Title } = Typography;
 export default function AllClubs() {
   const [filters, setFilters] = useState({
     facultyId: undefined,
+    categoryId: undefined,
     search: "",
     page: 1,
     limit: 12,
   });
   const [searchTerm, setSearchTerm] = useState("");
+  const [applyingId, setApplyingId] = useState(null);
 
   const { data, isLoading } = useGetAllClubsQuery(
     Object.fromEntries(
@@ -37,11 +45,13 @@ export default function AllClubs() {
     )
   );
   const { data: facultiesData } = useGetFacultiesQuery();
-  const [applyToClub, { isLoading: applying }] = useApplyToClubMutation();
+  const { data: categoriesData } = useGetCategoriesQuery();
+  const [applyToClub] = useApplyToClubMutation();
 
   const clubs = data?.data?.clubs || [];
   const pagination = data?.data?.pagination || {};
   const faculties = facultiesData?.data || [];
+  const categories = categoriesData?.data || [];
 
   // Debounced search
   useEffect(() => {
@@ -54,12 +64,15 @@ export default function AllClubs() {
 
   const handleApply = async (clubId) => {
     try {
+      setApplyingId(clubId);
       const result = await applyToClub(clubId).unwrap();
       if (result.success) {
         message.success("Ariza muvaffaqiyatli topshirildi!");
       }
     } catch (error) {
       message.error(error.data?.message || "Xatolik yuz berdi");
+    } finally {
+      setApplyingId(null);
     }
   };
 
@@ -67,6 +80,20 @@ export default function AllClubs() {
     setFilters((prev) => ({ ...prev, page }));
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  const clearFilters = () => {
+    setFilters({
+      facultyId: undefined,
+      categoryId: undefined,
+      search: "",
+      page: 1,
+      limit: 12,
+    });
+    setSearchTerm("");
+  };
+
+  const hasActiveFilters =
+    filters.facultyId || filters.categoryId || filters.search;
 
   if (isLoading && filters.page === 1) return <LoadingSpinner size="large" />;
 
@@ -79,11 +106,19 @@ export default function AllClubs() {
           Barcha to'garaklar
         </Title>
 
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+        {hasActiveFilters && (
+          <Button size="small" onClick={clearFilters} icon={<FilterOutlined />}>
+            Filterlarni tozalash
+          </Button>
+        )}
+      </div>
+
+      {/* Filters */}
+      <Card className="shadow-sm">
+        <div className="flex flex-col md:flex-row gap-3">
           <Select
             placeholder="Fakultet"
-            style={{ width: "100%" }}
-            className="w-full sm:w-48 md:w-56"
+            className="w-full md:w-56"
             allowClear
             value={filters.facultyId}
             onChange={(value) =>
@@ -102,15 +137,120 @@ export default function AllClubs() {
             ))}
           </Select>
 
+          <Select
+            placeholder="Kategoriya"
+            className="w-full md:w-56"
+            allowClear
+            value={filters.categoryId}
+            onChange={(value) =>
+              setFilters((prev) => ({
+                ...prev,
+                categoryId: value || undefined,
+                page: 1,
+              }))
+            }
+            loading={!categoriesData}
+          >
+            {categories.map((cat) => (
+              <Select.Option key={cat._id} value={cat._id}>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: cat.color }}
+                  />
+                  {cat.name}
+                  {cat.clubCount > 0 && (
+                    <Tag className="ml-auto">{cat.clubCount}</Tag>
+                  )}
+                </div>
+              </Select.Option>
+            ))}
+          </Select>
+
           <Input
             placeholder="Qidirish..."
             prefix={<SearchOutlined />}
-            className="w-full sm:w-48 md:w-64"
+            className="w-full md:w-64"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-      </div>
+
+        {/* Active filters display */}
+        {hasActiveFilters && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {filters.facultyId && (
+              <Tag
+                closable
+                onClose={() =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    facultyId: undefined,
+                    page: 1,
+                  }))
+                }
+                color="cyan"
+              >
+                {faculties.find((f) => f.id === filters.facultyId)?.name}
+              </Tag>
+            )}
+            {filters.categoryId && (
+              <Tag
+                closable
+                onClose={() =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    categoryId: undefined,
+                    page: 1,
+                  }))
+                }
+                color={
+                  categories.find((c) => c._id === filters.categoryId)?.color
+                }
+              >
+                {categories.find((c) => c._id === filters.categoryId)?.name}
+              </Tag>
+            )}
+            {filters.search && (
+              <Tag
+                closable
+                onClose={() => {
+                  setSearchTerm("");
+                  setFilters((prev) => ({ ...prev, search: "", page: 1 }));
+                }}
+              >
+                Qidiruv: {filters.search}
+              </Tag>
+            )}
+          </div>
+        )}
+      </Card>
+
+      {/* Statistics */}
+      {categories.length > 0 && !hasActiveFilters && (
+        <Row gutter={[12, 12]}>
+          {categories.slice(0, 6).map((cat) => (
+            <Col xs={12} sm={8} md={4} key={cat._id}>
+              <Card
+                className="text-center cursor-pointer hover:shadow-md transition-all"
+                onClick={() =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    categoryId: cat._id,
+                    page: 1,
+                  }))
+                }
+                style={{ borderTop: `3px solid ${cat.color}` }}
+              >
+                <div className="text-2xl mb-2" style={{ color: cat.color }}>
+                  {cat.clubCount || 0}
+                </div>
+                <div className="text-xs text-gray-600 truncate">{cat.name}</div>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      )}
 
       {clubs.length > 0 ? (
         <>
@@ -121,11 +261,12 @@ export default function AllClubs() {
                 xs={24} // Mobile: 1 column
                 sm={12} // Tablet: 2 columns
                 lg={8} // Desktop: 3 columns
+                xl={6} // Large desktop: 4 columns
               >
                 <ClubCard
                   club={club}
                   onApply={handleApply}
-                  applying={applying}
+                  applyingId={applyingId}
                 />
               </Col>
             ))}
@@ -151,12 +292,16 @@ export default function AllClubs() {
         <Card className="text-center py-8 md:py-12">
           <Empty
             description={
-              filters.search || filters.facultyId
+              hasActiveFilters
                 ? "Mos to'garaklar topilmadi"
                 : "To'garaklar mavjud emas"
             }
             image={Empty.PRESENTED_IMAGE_SIMPLE}
-          />
+          >
+            {hasActiveFilters && (
+              <Button onClick={clearFilters}>Filterlarni tozalash</Button>
+            )}
+          </Empty>
         </Card>
       )}
     </div>

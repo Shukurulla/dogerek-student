@@ -13,7 +13,7 @@ import {
 
 const { Text, Title } = Typography;
 
-export default function ClubCard({ club, onApply, applying }) {
+export default function ClubCard({ club, onApply, applyingId }) {
   const weekDays = {
     1: "Du",
     2: "Se",
@@ -89,7 +89,7 @@ export default function ClubCard({ club, onApply, applying }) {
         block
         icon={<SendOutlined />}
         onClick={() => onApply(club._id)}
-        loading={applying}
+        loading={applyingId === club._id}
         className="bg-gradient-to-r from-cyan-500 to-teal-600 border-0"
       >
         Ariza topshirish
@@ -101,12 +101,32 @@ export default function ClubCard({ club, onApply, applying }) {
     ? (club.currentStudents / club.capacity) * 100
     : 0;
 
+  // Get category color or default
+  const categoryColor = club.category?.color || "#1890ff";
+
   return (
     <Card
       className="h-full shadow-md border-0 hover:shadow-xl transition-all duration-300"
       cover={
-        <div className="h-32 bg-gradient-to-r from-cyan-500 to-teal-600 flex items-center justify-center">
-          <BookOutlined className="text-5xl text-white/80" />
+        <div
+          className="h-32 flex items-center justify-center relative"
+          style={{
+            background: `linear-gradient(135deg, ${categoryColor}20 0%, ${categoryColor}40 100%)`,
+          }}
+        >
+          <BookOutlined
+            className="text-5xl"
+            style={{ color: categoryColor + "80" }}
+          />
+          {club.category && (
+            <Tag
+              color={categoryColor}
+              className="absolute top-3 left-3"
+              style={{ borderColor: categoryColor }}
+            >
+              {club.category.name}
+            </Tag>
+          )}
         </div>
       }
     >
