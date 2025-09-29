@@ -81,8 +81,8 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       <div className="bg-gradient-to-r from-cyan-500 to-teal-600 rounded-lg p-6 text-white">
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="row ">
+          <div className="col-lg-10 col-md-10 col-sm-12">
             <Title level={2} className="!text-white !mb-1">
               Xush kelibsiz, {profile?.full_name}!
             </Title>
@@ -90,7 +90,7 @@ export default function Dashboard() {
               {profile?.department?.name} • {profile?.group?.name}
             </Text>
           </div>
-          <div className="text-right">
+          <div className="col-lg-2 col-md-2 col-sm-12">
             <Text className="text-white/80 block">Student ID</Text>
             <Text className="text-xl font-bold text-white">
               {profile?.student_id_number}
