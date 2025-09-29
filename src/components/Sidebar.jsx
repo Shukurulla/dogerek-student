@@ -95,7 +95,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
             collapsed && !isMobile ? "text-xl" : "text-xl md:text-2xl"
           }`}
         >
-          {collapsed && !isMobile ? (
+          {collapsed ? (
             "S"
           ) : (
             <div className="flex items-center justify-start gap-2">
