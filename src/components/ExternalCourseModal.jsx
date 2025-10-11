@@ -130,7 +130,7 @@ export default function ExternalCourseModal({
             { required: true, message: "O'quv markaz nomi kiritilishi shart!" },
           ]}
         >
-          <Input placeholder="Cambridge Learning Center" size="large" />
+          <Input placeholder="Uni Academy" size="large" />
         </Form.Item>
 
         <Form.Item
